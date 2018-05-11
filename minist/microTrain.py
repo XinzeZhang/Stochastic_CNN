@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 # Import MNIST data
 import tensorflow.examples.tutorials.mnist.input_data as input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+mnist = input_data.read_data_sets("MNIST-data/", one_hot=True)
 
 learning_rate = 0.0001
 num_steps = 39100
