@@ -3,16 +3,23 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 import numpy as np
+import math
+import os
+import sys
 import seaborn as sns
 # Import MNIST data
 import tensorflow.examples.tutorials.mnist.input_data as input_data
 mnist = input_data.read_data_sets("MNIST-data/", one_hot=True)
+os.environ['CUDA_VISIBLE_DEVICES']='0'
 
-learning_rate = 0.0001
+numC1 =64
+learning_rate = 0.0005
 num_steps = 39100
-microtrain_steps =20000
+
 batch_size = 128
-display_step = 391
+display_step = int(math.ceil(50000/batch_size))
+microtrain_steps =10*display_step
+# microtrain_steps =int(sys.argv[1])*display_step
 
 # Network Parameters
 num_input = 784 # MNIST data input (img shape: 28*28)
@@ -69,19 +76,20 @@ def conv_net(x, weights, biases, dropout):
     return out
 def create_graph():
     # Store layers weight & bias
+
     weights = {
         # 5x5 conv, 1 input, 32 outputs
-        'wc1': tf.Variable(np.array(np.random.normal(0,0.1,[5,5,1,7]),np.float32)),
+        'wc1': tf.Variable(np.array(np.random.normal(0,0.1,[5,5,1,numC1]),np.float32)),
         # 5x5 conv, 32 inputs, 64 outputs
         # 'wc2': tf.Variable(np.array(np.random.normal(0,0.12,[5,5,32,64]),np.float32)),
         # # fully connected, 7*7*64 inputs, 1024 outputs
         # 'wd1': tf.Variable(np.array(np.random.normal(0,0.12,[7*7*64,1024]),np.float32)),
         # 1024 inputs, 10 outputs (class prediction)
-        'out': tf.Variable(np.array(np.random.normal(0,0.1,[14*14*7,num_classes]),np.float32))
+        'out': tf.Variable(np.array(np.random.normal(0,0.1,[14*14*numC1,num_classes]),np.float32))
     }
 
     biases = {
-        'bc1': tf.Variable(np.array(np.random.normal(0,0.1,[7]),np.float32)),
+        'bc1': tf.Variable(np.array(np.random.normal(0,0.1,[numC1]),np.float32)),
         # 'bc2': tf.Variable(np.array(np.random.normal(0,0.1,[64]),np.float32)),
         # 'bd1': tf.Variable(np.array(np.random.normal(0,0.1,[1024]),np.float32)),
         'out': tf.Variable(np.array(np.random.normal(0,0.1,[num_classes]),np.float32))
@@ -92,8 +100,6 @@ def create_graph():
     prediction = tf.nn.softmax(logits)
 
     # Define loss and optimizer
-
-
     loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
         logits=logits, labels=Y))
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -134,9 +140,9 @@ with tf.Session() as sess:
                                                                  keep_prob: 1.0})
             train_loss_array.append(train_loss)
             train_acc_array.append(train_acc)
-            print("Step " + str(step) + ", Minibatch Loss= " + \
+            print("Step " + str(int(step/display_step)) + ", Minibatch Loss= " + \
                   "{:.4f}".format(train_loss) + ", Training Accuracy= " + \
-                  "{:.3f}".format(train_acc))
+                  "{:.5f}".format(train_acc))
 
             acc =0
             loss=0
@@ -152,10 +158,11 @@ with tf.Session() as sess:
                 test_acc+=acc
             test_loss_array.append(test_loss / 10)
             test_acc_array.append(test_acc / 10)
-            print("Step " + str(step) + ", Minibatch Loss= " + \
+            print("Step " + str(int(step/display_step)) + ", Minibatch Loss= " + \
                   "{:.4f}".format(test_loss/10) + ", test Accuracy= " + \
-                  "{:.3f}".format(test_acc/10))
-    print("cost_time: %.6f"% (time.clock() - start))
+                  "{:.5f}".format(test_acc/10))
+    with open("./Result_npz/outputlog.txt", "a+") as f:
+        print("numC1 = %d  cost_time: %.6f"% (numC1,time.clock() - start),file=f)
     print("Optimization Finished!")
 
     acc = 0
@@ -191,8 +198,8 @@ biases2 = {
     'out': tf.Variable(temp_biases['out'])
 }
 logits2 = conv_net(X, weights2, biases2, keep_prob)
-
 pred2 = tf.nn.softmax(logits2)
+
 # Define loss and optimizer
 cost2 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=Y))
 optimizer2 = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost2)
@@ -236,10 +243,11 @@ with tf.Session() as sess:
             test_loss_array.append(test_loss / 10)
             test_acc_array.append(test_acc / 10)
             if(step % display_step ==0) :
-                print("Step " + str(step) + ", Minibatch Loss= " + \
+                print("Step " + str(int(step/display_step)) + ", Minibatch Loss= " + \
                   "{:.6f}".format(test_loss / 10) + ", test Accuracy= " + \
                   "{:.6f}".format(test_acc / 10) +"  time= "+"{:.6f}".format(time.clock()-start))
-    print("cost_time: %.6f"% (time.clock() - start))
+    with open("./Result_npz/outputlog.txt", "a+") as f:
+        print("numC1 = %d  cost_time: %.6f"% (numC1,time.clock() - start),file=f)
     print("Optimization Finished!")
     acc = 0
     for i in range(10):
@@ -250,9 +258,11 @@ with tf.Session() as sess:
                                              keep_prob: 1.0})
 
     print('%.6f'%(acc / 10))
-
-    np.savez("./Result1/acc.npz", test_acc_array, train_acc_array)
-    np.savez("./Result1/loss.npz", test_loss_array, train_loss_array)
+    dirs = "./Result_npz/"+str(numC1)
+    if not os.path.exists(dirs):
+        os.mkdir(dirs)
+    np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
+    np.savez(dirs+"/loss"+str(int(microtrain_steps/display_step))+".npz", test_loss_array, train_loss_array)
     # plt_x = np.arange(0, num_steps+microtrain_steps, 100)
     # plt_y = train_loss_array
     #

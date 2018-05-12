@@ -1,0 +1,2 @@
+numC1 = 64  cost_time: 24.615782
+numC1 = 64  cost_time: 170.011670
