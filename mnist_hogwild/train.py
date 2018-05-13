@@ -3,57 +3,108 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms
+import numpy as np
 
-def train(rank, args, model):
+def train(rank, args, model,device):
+    model=model.to(device)
     torch.manual_seed(args.seed + rank)
 
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
+        datasets.MNIST('./data', train=True, download=True,
                     transform=transforms.Compose([
                         transforms.ToTensor(),
                         transforms.Normalize((0.1307,), (0.3081,))
                     ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+        datasets.MNIST('./data', train=False, transform=transforms.Compose([
                         transforms.ToTensor(),
                         transforms.Normalize((0.1307,), (0.3081,))
                     ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
 
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+    optimizer = optim.SGD(model.parameters(), lr=args.SGD_lr, momentum=args.momentum)
+    # optimizer = optim.Adam(model.parameters(), lr=args.Adam_lr)
+
+    train_acc_array=[]
+    # train_acc=0.0
+    test_acc_array=[]
+    # test_acc=0.0
     for epoch in range(1, args.epochs + 1):
-        train_epoch(epoch, args, model, train_loader, optimizer)
-        test_epoch(model, test_loader)
+        _train_epoch(epoch, args, model, device, train_loader, optimizer)
+        train_acc = _train_acc(model, device, train_loader)
+        train_acc_array.append(train_acc)
+        test_acc = _test_epoch(model,device, test_loader)
+        test_acc_array.append(test_acc)
+
+    dirs = "./Result_npz/"
+    if not os.path.exists(dirs):
+        os.mkdir(dirs)
+    # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
+    np.savez(dirs+"/acc"+".npz", test_acc_array, train_acc_array)
 
 
-def train_epoch(epoch, args, model, data_loader, optimizer):
+def _train_epoch(epoch, args, model, device, data_loader, optimizer):
     model.train()
     pid = os.getpid()
+    train_loss=0
     for batch_idx, (data, target) in enumerate(data_loader):
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
+        train_loss=loss.item()
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 pid, epoch, batch_idx * len(data), len(data_loader.dataset),
                 100. * batch_idx / len(data_loader), loss.item()))
-
-
-def test_epoch(model, data_loader):
+    # return train_loss
+        
+def _train_acc(model, device, data_loader):
     model.eval()
     test_loss = 0
     correct = 0
+
     with torch.no_grad():
         for data, target in data_loader:
+            data, target = data.to(device), target.to(device)
             output = model(data)
             test_loss += F.nll_loss(output, target, size_average=False).item() # sum up batch loss
             pred = output.max(1)[1] # get the index of the max log-probability
             correct += pred.eq(target).sum().item()
-
     test_loss /= len(data_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    print('-----------------------------------------------------------------')
+    print('Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(
         test_loss, correct, len(data_loader.dataset),
         100. * correct / len(data_loader.dataset)))
+    # with open("./Result_npz/outputlog.txt", "a+") as f:
+    #     print('\nTrain set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(
+    #     test_loss, correct, len(data_loader.dataset),
+    #     100. * correct / len(data_loader.dataset)), file=f)
+    acc= 100. * correct / len(data_loader.dataset)
+    return acc
+
+def _test_epoch(model,device, data_loader):
+    model.eval()
+    test_loss = 0
+    correct = 0
+
+    with torch.no_grad():
+        for data, target in data_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, size_average=False).item() # sum up batch loss
+            pred = output.max(1)[1] # get the index of the max log-probability
+            correct += pred.eq(target).sum().item()
+    test_loss /= len(data_loader.dataset)
+    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(
+        test_loss, correct, len(data_loader.dataset),
+        100. * correct / len(data_loader.dataset)))
+    print('-----------------------------------------------------------------')
+    with open("./Result_npz/outputlog.txt", "a+") as f:
+        print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(
+        test_loss, correct, len(data_loader.dataset),
+        100. * correct / len(data_loader.dataset)), file=f)
+    return 100. * correct / len(data_loader.dataset)
