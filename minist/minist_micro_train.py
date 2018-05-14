@@ -17,7 +17,7 @@ learning_rate = 0.0005
 num_steps = 39100
 
 batch_size = 128
-display_step = int(math.ceil(50000/batch_size))
+display_step = int(math.ceil(55000/batch_size))
 microtrain_steps =10*display_step
 # microtrain_steps =int(sys.argv[1])*display_step
 
