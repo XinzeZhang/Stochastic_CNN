@@ -28,7 +28,7 @@ def plot_micro(type=0):
     # k_microTrain=10
     best_acc=''
     if type ==0 :
-        s = "Acc"
+        s = "acc"
         loc = "lower right"
         for key,value in K_color.items():
             best_acc+=acc_micro(s,loc,key,value)
@@ -42,13 +42,13 @@ def plot_micro(type=0):
     bbox=dict(facecolor='white', alpha=0.2),
     horizontalalignment='right', verticalalignment='top')
 
-    else:
-        s ="Loss"
-        loc = "upper right"
-        loss_micro(s,loc,k_microTrain,"red")
-        plt.legend(loc=loc)
-        # new_micro(s,loc,20,"blue")
-        plt.ylabel("Loss", size=14)
+    # else:
+    #     s ="Loss"
+    #     loc = "upper right"
+    #     loss_micro(s,loc,k_microTrain,"red")
+    #     plt.legend(loc=loc)
+    #     # new_micro(s,loc,20,"blue")
+    #     plt.ylabel("Loss", size=14)
     
     # plt.savefig('./Result_fig/SCSF_'+str(k_microTrain)+'mT_'+s+'.png')
     plt.savefig('./Result_fig/DCDF_'+s+'.png')
@@ -103,4 +103,4 @@ if __name__ == '__main__':
     # plot_micro(is_loss)
     # plt.show()
     plot_micro(is_acc)
-    # plt.show()
+    plt.show()
