@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import time
 import numpy as np
+import os
 import math
 import sys
-import os
+
 import seaborn as sns
 # Import MNIST data
 import tensorflow.examples.tutorials.mnist.input_data as input_data

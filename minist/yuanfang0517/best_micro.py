@@ -264,7 +264,7 @@ with tf.Session() as sess:
             test_loss = 0
             for i in range(10):
                 start_index = i * 1000
-                end_index = (i + 1) * 1000 - 1
+                end_index = (i + 1) * 1000
                 acc, loss = sess.run([accuracy2, cost2], feed_dict={X: mnist.test.images[start_index:end_index],
                                                                      Y: mnist.test.labels[start_index:end_index],
                                                                      keep_prob: 1.0})

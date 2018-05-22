@@ -1,0 +1,12 @@
+kernel_num=64 microepochs=1---------------------------------------------
+
+precision @ 1 =0.53254
+train_time:  17.0254487991333
+kernel_num=64 microepochs=1---------------------------------------------
+
+epoch =0 test_acc =0.57575 train_acc = 0.54166
+epoch =1 test_acc =0.59306 train_acc = 0.54168
+epoch =2 test_acc =0.60651 train_acc = 0.54168
+epoch =3 test_acc =0.61867 train_acc = 0.54166
+epoch =4 test_acc =0.60740 train_acc = 0.54170
+epoch =5 test_acc =0.62243 train_acc = 0.54170

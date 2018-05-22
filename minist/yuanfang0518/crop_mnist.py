@@ -227,8 +227,8 @@ with tf.Session() as sess:
 
 
     if allTrain:
-        np.savez("./Argu_Result_npz/acc0.npz", test_acc_array, train_acc_array)
-        np.savez("./Argu_Result_npz/loss0.npz", test_loss_array, train_loss_array)
+        np.savez("./Argu_Result_npz/acc0_"+numberOfnet+".npz", test_acc_array, train_acc_array)
+        # np.savez("./Argu_Result_npz/loss0.npz", test_loss_array, train_loss_array)
         np.savez("./Argu_Result_npz/pred0_"+numberOfnet+".npz",prediction_array)
 
     else:
