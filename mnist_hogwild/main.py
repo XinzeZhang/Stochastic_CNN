@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.multiprocessing as mp
 
-from train import train
+from train import train,micro_train
 
 # Training settings
 # ==============================================================================
@@ -79,13 +79,13 @@ if __name__ == '__main__':
 
     device=torch.device("cuda" if use_cuda else "cpu")
 
-    model = SCSF_Net()
+    # model = SCSF_Net()
 
-    # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
-    for rank in range(args.num_train):
-        train(rank,args,model,device)
+    # # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
+    # for rank in range(args.num_train):
+    #     train(rank,args,model,device)
     
-    torch.save(model.state_dict(),"./C10F1440.pkl")
+    # torch.save(model.state_dict(),"./C10F1440.pkl")
 
     model_re=SCSF_Net()
     model_re.load_state_dict(torch.load("./C10F1440.pkl"))
@@ -94,12 +94,17 @@ if __name__ == '__main__':
     for child in model_re.children():
         layer_id +=1
         print("layer Id: "+str(layer_id), child)
+        for param in child.parameters():
+            param.requires_grad = False
+    model_re.fc1.weight.requires_grad= True
+    model_re.fc1.bias.requires_grad=True
 
-    for param in model_re.parameters():
-        param.requires_grad = False
+    # for param in model_re.parameters():
+    #     print(param)
+    #     param.requires_grad = False
     
-    num_ftrs=model_re.fc1.in_features
-    model_re.fc1=nn.Linear(num_ftrs,10)
-    
+    # num_ftrs=model_re.fc1.in_features
+    # model_re.fc1=nn.Linear(num_ftrs,10)
+
     for rank in range(args.num_train):
-        train(rank,args,model_re,device)
+        micro_train(rank,args,model_re,device)
