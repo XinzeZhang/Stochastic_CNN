@@ -35,9 +35,25 @@ parser.add_argument('--num_train', type=int, default=1, metavar='N',
                     help='how many training times to use (default: 2)')
 # ==============================================================================
 
-class Net(nn.Module):
+class SCSF_Net(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(SCSF_Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+        self.conv2_drop = nn.Dropout2d()
+        self.fc1 = nn.Linear(1440, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 1440)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+class DCDF_Net(nn.Module):
+    def __init__(self):
+        super(DCDF_Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
@@ -45,7 +61,9 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(50, 10)
 
     def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
@@ -61,8 +79,27 @@ if __name__ == '__main__':
 
     device=torch.device("cuda" if use_cuda else "cpu")
 
-    model = Net()
+    model = SCSF_Net()
+
     # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
     for rank in range(args.num_train):
         train(rank,args,model,device)
+    
+    torch.save(model.state_dict(),"./C10F1440.pkl")
 
+    model_re=SCSF_Net()
+    model_re.load_state_dict(torch.load("./C10F1440.pkl"))
+
+    layer_id=0
+    for child in model_re.children():
+        layer_id +=1
+        print("layer Id: "+str(layer_id), child)
+
+    for param in model_re.parameters():
+        param.requires_grad = False
+    
+    num_ftrs=model_re.fc1.in_features
+    model_re.fc1=nn.Linear(num_ftrs,10)
+    
+    for rank in range(args.num_train):
+        train(rank,args,model_re,device)

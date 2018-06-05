@@ -56,10 +56,10 @@ def _train_epoch(epoch, args, model, device, data_loader, optimizer):
         train_loss=loss.item()
         loss.backward()
         optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                pid, epoch, batch_idx * len(data), len(data_loader.dataset),
-                100. * batch_idx / len(data_loader), loss.item()))
+        # if batch_idx % args.log_interval == 0:
+        #     print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+        #         pid, epoch, batch_idx * len(data), len(data_loader.dataset),
+        #         100. * batch_idx / len(data_loader), loss.item()))
     # return train_loss
         
 def _train_acc(model, device, data_loader):
