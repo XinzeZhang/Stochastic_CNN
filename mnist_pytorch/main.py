@@ -32,7 +32,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--num_train', type=int, default=1, metavar='N',
-                    help='how many training times to use (default: 2)')
+                    help='how many training times to use (default: 1)')
 # ==============================================================================
 
 class SCSF_Net(nn.Module):
@@ -61,9 +61,9 @@ class DCDF_Net(nn.Module):
         self.fc2 = nn.Linear(50, 10)
 
     def forward(self, x):
-        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        # stride (the stride of the window) : Default value is kernel_size, thus it is 2 here.
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        # stride (the stride of the window) : Default value is kernel_size, thus it is 2 here.
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
         x = x.view(-1, 320)
         x = F.relu(self.fc1(x))
@@ -82,8 +82,8 @@ if __name__ == '__main__':
     # model = SCSF_Net()
 
     # # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
-    # for rank in range(args.num_train):
-    #     train(rank,args,model,device)
+
+    # train(args,model,device)
     
     # torch.save(model.state_dict(),"./C10F1440.pkl")
 
@@ -96,6 +96,7 @@ if __name__ == '__main__':
         print("layer Id: "+str(layer_id), child)
         for param in child.parameters():
             param.requires_grad = False
+
     model_re.fc1.weight.requires_grad= True
     model_re.fc1.bias.requires_grad=True
 
@@ -106,5 +107,4 @@ if __name__ == '__main__':
     # num_ftrs=model_re.fc1.in_features
     # model_re.fc1=nn.Linear(num_ftrs,10)
 
-    for rank in range(args.num_train):
-        micro_train(rank,args,model_re,device)
+    micro_train(args,model_re,device)

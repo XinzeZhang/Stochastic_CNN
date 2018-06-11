@@ -6,9 +6,9 @@ from torchvision import datasets, transforms
 import numpy as np
 
 
-def train(rank, args, model, device):
+def train(args, model, device):
     model = model.to(device)
-    torch.manual_seed(args.seed + rank)
+    torch.manual_seed(args.seed)
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('./data', train=True, download=True,
@@ -45,9 +45,10 @@ def train(rank, args, model, device):
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
     np.savez(dirs+"/acc"+".npz", test_acc_array, train_acc_array)
 
-def micro_train(rank, args, model, device):
+
+def micro_train(args, model, device):
     model = model.to(device)
-    torch.manual_seed(args.seed + rank)
+    torch.manual_seed(args.seed)
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('./data', train=True, download=True,
