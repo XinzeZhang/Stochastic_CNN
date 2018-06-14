@@ -24,9 +24,9 @@ def train(args, model, device):
         ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
 
-    optimizer = optim.SGD(model.parameters(),
-                          lr=args.SGD_lr, momentum=args.momentum)
-    # optimizer = optim.Adam(model.parameters(), lr=args.Adam_lr)
+    # optimizer = optim.SGD(model.parameters(),
+    #                       lr=args.SGD_lr, momentum=args.momentum)
+    optimizer = optim.Adam(model.parameters(), lr=args.Adam_lr)
 
     train_acc_array = []
     # train_acc=0.0
@@ -64,9 +64,9 @@ def micro_train(args, model, device):
         ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
 
-    optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
-                          lr=args.SGD_lr, momentum=args.momentum)
-    # optimizer = optim.Adam(model.parameters(), lr=args.Adam_lr)
+    # optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
+    #                       lr=args.SGD_lr, momentum=args.momentum)
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.Adam_lr)
 
     train_acc_array = []
     # train_acc=0.0

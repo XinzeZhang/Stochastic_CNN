@@ -21,7 +21,7 @@ parser.add_argument('--SGD_lr', type=float, default=0.0005, metavar='LR',
                     help='SGD learning rate (default: 0.01)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
                     help='SGD momentum (default: 0.5)')
-parser.add_argument('--Adam_lr', type=float, default=0.0005, metavar='LR',
+parser.add_argument('--Adam_lr', type=float, default=0.001, metavar='LR',
                     help='Adam learning rate (default: 0.01)')
 # ------------------------------------------------------------------------------
 parser.add_argument('--no-cuda', action='store_true', default=False,
