@@ -12,10 +12,10 @@ def train(args, model, device):
 
     train_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST('./data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
+                              transform=transforms.Compose([
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.1307,), (0.3081,))
+                              ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
     test_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST('./data', train=False, transform=transforms.Compose([
@@ -27,7 +27,6 @@ def train(args, model, device):
     optimizer = optim.Adam(model.parameters(), lr=args.aT_Adam_lr)
     # optimizer = optim.SGD(model.parameters(),lr=args.aT_Adam_lr,momentum=args.momentum)
     print(optimizer)
- 
 
     train_acc_array = []
     # train_acc=0.0
@@ -40,7 +39,7 @@ def train(args, model, device):
         test_acc = _test_epoch(epoch, model, device, test_loader)
         test_acc_array.append(test_acc)
 
-    return train_acc_array,test_acc_array
+    return train_acc_array, test_acc_array
     # dirs = "./Result_npz/"
     # if not os.path.exists(dirs):
     #     os.mkdir(dirs)
@@ -54,10 +53,10 @@ def micro_train(args, model, device):
 
     train_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST('./data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
+                              transform=transforms.Compose([
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.1307,), (0.3081,))
+                              ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
     test_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST('./data', train=False, transform=transforms.Compose([
@@ -65,8 +64,9 @@ def micro_train(args, model, device):
             transforms.Normalize((0.1307,), (0.3081,))
         ])),
         batch_size=args.batch_size, shuffle=True, num_workers=1)
-    
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.aT_Adam_lr)
+
+    optimizer = optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=args.aT_Adam_lr)
     print(optimizer)
     # optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
     #                       lr=args.SGD_lr, momentum=args.momentum)
@@ -74,14 +74,15 @@ def micro_train(args, model, device):
     # train_acc=0.0
     test_acc_array = []
     # test_acc=0.0
-    for epoch in range(1, args.microTrain_epochs-100 + 1):
+    for epoch in range(1, args.total_epochs-args.k_allTrain_epochs-100 + 1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)
         train_acc_array.append(train_acc)
         test_acc = _test_epoch(epoch, model, device, test_loader)
         test_acc_array.append(test_acc)
 
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.mT_Adam_lr)
+    optimizer = optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=args.mT_Adam_lr)
     print(optimizer)
     for epoch in range(args.microTrain_epochs-100 + 1, args.microTrain_epochs+1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
@@ -90,7 +91,7 @@ def micro_train(args, model, device):
         test_acc = _test_epoch(epoch, model, device, test_loader)
         test_acc_array.append(test_acc)
 
-    return train_acc_array,test_acc_array
+    return train_acc_array, test_acc_array
     # dirs = "./Result_npz/"
     # if not os.path.exists(dirs):
     #     os.mkdir(dirs)
@@ -132,7 +133,7 @@ def _train_acc(epoch, model, device, data_loader):
             correct += pred.eq(target).sum().item()
     test_loss /= len(data_loader.dataset)
     print('-----------------------------------------------------------------')
-    print('Train Epoch: {}, Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(epoch,
+    print('Train Epoch: {}, Train set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                  test_loss, correct, len(
                                                                                                      data_loader.dataset),
                                                                                                  100. * correct / len(data_loader.dataset)))
@@ -158,13 +159,13 @@ def _test_epoch(epoch, model, device, data_loader):
             pred = output.max(1)[1]  # get the index of the max log-probability
             correct += pred.eq(target).sum().item()
     test_loss /= len(data_loader.dataset)
-    print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(epoch,
+    print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                 test_loss, correct, len(
                                                                                                     data_loader.dataset),
                                                                                                 100. * correct / len(data_loader.dataset)))
     print('-----------------------------------------------------------------')
     with open("./Result_npz/outputlog.txt", "a+") as f:
-        print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)\n'.format(epoch,
+        print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                     test_loss, correct, len(
                                                                                                         data_loader.dataset),
                                                                                                     100. * correct / len(data_loader.dataset)), file=f)

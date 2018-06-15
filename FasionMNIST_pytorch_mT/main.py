@@ -11,6 +11,7 @@ from cnn_model import SCSF_Net, DCDF_Net
 from train import train,micro_train
 
 import time
+from _data_process import asMinutes
 
 # Training settings
 # ==============================================================================
@@ -23,8 +24,6 @@ parser.add_argument('--total_epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 300)')
 parser.add_argument('--k_allTrain_epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 100)')
-parser.add_argument('--microTrain_epochs', type=int, default=290, metavar='N',
-                    help='number of epochs to train (default: 200)')
 # ------------------------------------------------------------------------------
 parser.add_argument('--SGD_lr', type=float, default=0.001, metavar='LR',
                     help='SGD learning rate (default: 0.01)')
@@ -57,17 +56,20 @@ if __name__ == '__main__':
     device=torch.device("cuda" if use_cuda else "cpu")
 
     aT_model = SCSF_Net()
+    aT_model.share_memory().to(device)
     if os.path.exists("./Model_State/"+str(aT_model.__class__.__name__)) == False:
         os.mkdir("./Model_State/"+str(aT_model.__class__.__name__))
     # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
 
-    time_start=time.clock()
+    time_start=time.time()
     train_acc_array,test_acc_array=train(args,aT_model,device)
 
-    torch.save(aT_model.state_dict(),"./Model_State/"+str(aT_model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl")
+    dir_model_state="./Model_State/"+str(aT_model.__class__.__name__)+"/"+str(aT_model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"
+    torch.save(aT_model.state_dict(),dir_model_state)
 
     mT_model=SCSF_Net()
-    mT_model.load_state_dict(torch.load("./Model_State/"+str(aT_model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"))
+    mT_model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
+    mT_model.load_state_dict(torch.load(dir_model_state))
 
     layer_id=0
     for child in mT_model.children():
@@ -94,6 +96,6 @@ if __name__ == '__main__':
     if not os.path.exists(dirs):
         os.mkdir(dirs)
     with open(dirs+"/Time_Log.txt", "a+") as f:
-        print("K: %s \t %.6f s" % (args.k_allTrain_epochs,(time.time() - time_start)) , file=f)
+        print("K: %s \t %s" % (args.k_allTrain_epochs,asMinutes(time.time() - time_start)) , file=f)
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
     np.savez(dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)
