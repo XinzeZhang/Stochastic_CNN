@@ -22,7 +22,7 @@ parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--total_epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 300)')
-parser.add_argument('--k_allTrain_epochs', type=int, default=1, metavar='N',
+parser.add_argument('--k_allTrain_epochs', type=int, default=0, metavar='N',
                     help='number of epochs to train (default: 100)')
 # ------------------------------------------------------------------------------
 # setting learning rate as https://cs.nyu.edu/~wanli/dropc/dropc.pdf.
@@ -78,14 +78,11 @@ if __name__ == '__main__':
         exit()
 
 
-    if os.path.exists("./Result_npz/C64") == False:
-        os.mkdir("./Result_npz/C64")
-    dirs = "./Result_npz/C64"
+    dirs = "./Result_npz/C64/"
     if not os.path.exists(dirs):
         os.mkdir(dirs)
     
-    
     with open(dirs+"/Time_Log.txt", "a+") as f:
-        print("K: %s \t %s" % (args.total_epochs,asMinutes(time.time() - time_start)) , file=f)
+        print("K: %s \t %s" % (args.k_allTrain_epochs,asMinutes(time.time() - time_start)) , file=f)
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
     np.savez(dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)

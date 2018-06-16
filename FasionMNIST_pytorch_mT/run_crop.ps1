@@ -1,10 +1,16 @@
-python main.py --k_allTrain_epochs 1 --microTrain_epochs 299
-python main.py --k_allTrain_epochs 3 --microTrain_epochs 297
-for($i=5; $i -le 40; $i=$i+5)
+python unit_test.py --k_allTrain_epochs 1 
+python unit_test.py --k_allTrain_epochs 5 
+for($i=0; $i -lt 250; $i=$i+10)
 {
-    $j=300-$i
     Write-Host "============================================================"
-    Write-Host "python main.py --k_allTrain_epochs $i --microTrain_epochs $j"
+    Write-Host "python unit_test.py --k_allTrain_epochs $i "
     Write-Host "============================================================"
-    python main.py --k_allTrain_epochs $i --microTrain_epochs $j
+    python unit_test.py --k_allTrain_epochs $i 
+}
+for($i=250; $i -lt 300; $i=$i+10)
+{
+    Write-Host "============================================================"
+    Write-Host "python unit_test.py --k_allTrain_epochs $i "
+    Write-Host "============================================================"
+    python unit_test.py --k_allTrain_epochs $i 
 }

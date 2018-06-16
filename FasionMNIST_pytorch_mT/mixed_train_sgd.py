@@ -112,79 +112,24 @@ def all_train(args, model, device):
     w123b = w12b+args.LR_window3*2
     w123c = w12b+args.LR_window3*3
     w123d = w12b+args.LR_window3*4
-    # lr windows 1
-    optimizer = optim.SGD(model.parameters(), lr=init_lr,
-                          weight_decay=0.0005, momentum=0.9)
-    print(optimizer)
-    for epoch in range(1, w1 + 1):
-        _train_epoch(epoch, args, model, device, train_loader, optimizer)
-        train_acc = _train_acc(epoch, model, device, train_loader)
-        train_acc_array.append(train_acc)
-        test_acc = _test_epoch(epoch, model, device, test_loader, args)
-        test_acc_array.append(test_acc)
 
-    # lr windows 2
-    optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                          0.5, weight_decay=0.0005, momentum=0.9)
-    print(optimizer)
-    for epoch in range(w1+1, w12a + 1):
-        _train_epoch(epoch, args, model, device, train_loader, optimizer)
-        train_acc = _train_acc(epoch, model, device, train_loader)
-        train_acc_array.append(train_acc)
-        test_acc = _test_epoch(epoch, model, device, test_loader, args)
-        test_acc_array.append(test_acc)
-
-    optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                          0.1, weight_decay=0.0005, momentum=0.9)
-    print(optimizer)
-    for epoch in range(w12a+1, w12b + 1):
-        _train_epoch(epoch, args, model, device, train_loader, optimizer)
-        train_acc = _train_acc(epoch, model, device, train_loader)
-        train_acc_array.append(train_acc)
-        test_acc = _test_epoch(epoch, model, device, test_loader, args)
-        test_acc_array.append(test_acc)
-
-    # lr windows 3
-    if args.LR_window3 > 0:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.05, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w12b+1, w123a + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
-
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.01, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123a+1, w123b + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
-
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.005, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123b+1, w123c + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
-
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.001, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123c+1, w123d + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+    # lr window 1
+    train_window(0, w1, args, model, device, train_loader,
+                test_loader, init_lr, train_acc_array, test_acc_array)
+    # lr window 2
+    train_window(w1, w12a, args, model, device, train_loader,
+                    test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+    train_window(w12a, w12b, args, model, device, train_loader,
+                    test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+    # lr window 3
+    train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+    train_window(w123a, w123b, args, model, device, train_loader,
+                    test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+    train_window(w123b, w123c, args, model, device, train_loader,
+                    test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+    train_window(w123c, w123d, args, model, device, train_loader,
+                    test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     dir_model_state = "./Model_State/"+str(model.__class__.__name__)+"/"+str(
         model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"
@@ -233,102 +178,116 @@ def micro_train(args, model, device):
     if args.k_allTrain_epochs < w1:
         half_freeze(0, w1, args, model, device, train_loader,
                     test_loader, init_lr, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr,
-                              weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(1, w1 + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     # lr windows 2
     if w1 <= args.k_allTrain_epochs < w12a:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
         half_freeze(w1, w12a, args, model, device, train_loader,
                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.5, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w1+1, w12a + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     if w12a <= args.k_allTrain_epochs < w12b:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
         half_freeze(w12a, w12b, args, model, device, train_loader,
                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.1, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w12a + 1, w12b + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     # lr windows 3
     if w12b <= args.k_allTrain_epochs < w123a:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
         half_freeze(w12b, w123a, args, model, device, train_loader,
                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.05, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w12b+1, w123a + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     if w123a <= args.k_allTrain_epochs < w123b:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
         half_freeze(w123a, w123b, args, model, device, train_loader,
-                    test_loader, init_lr*0.01, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.01, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123a+1, w123b + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     if w123b <= args.k_allTrain_epochs < w123c:
-        half_freeze(w123b, w123b, args, model, device, train_loader,
-                    test_loader, init_lr*0.005, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.005, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123b+1, w123c + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        half_freeze(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     if w123c <= args.k_allTrain_epochs < w123d:
-        half_freeze(w123c, w123c, args, model, device, train_loader,
-                    test_loader, init_lr*0.001, train_acc_array, test_acc_array)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=init_lr *
-                              0.001, weight_decay=0.0005, momentum=0.9)
-        print(optimizer)
-        for epoch in range(w123c+1, w123d + 1):
-            _train_epoch(epoch, args, model, device, train_loader, optimizer)
-            train_acc = _train_acc(epoch, model, device, train_loader)
-            train_acc_array.append(train_acc)
-            test_acc = _test_epoch(epoch, model, device, test_loader, args)
-            test_acc_array.append(test_acc)
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        half_freeze(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     return train_acc_array, test_acc_array
 
@@ -362,6 +321,19 @@ def half_freeze(L_W, R_W, args, model, device, train_loader, test_loader, lr, tr
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
     print("---------> freeze the convolutional layer <---------")
     for epoch in range(args.k_allTrain_epochs + 1, R_W + 1):
+        _train_epoch(epoch, args, model, device, train_loader, optimizer)
+        train_acc = _train_acc(epoch, model, device, train_loader)
+        train_acc_array.append(train_acc)
+        test_acc = _test_epoch(epoch, model, device, test_loader, args)
+        test_acc_array.append(test_acc)
+
+
+def train_window(L_W, R_W, args, model, device, train_loader, test_loader, lr, train_acc_array, test_acc_array):
+    optimizer = optim.SGD(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
+    print("---------> Step into another training window <---------")
+    print(optimizer)
+    for epoch in range(L_W+1, R_W + 1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)
         train_acc_array.append(train_acc)
