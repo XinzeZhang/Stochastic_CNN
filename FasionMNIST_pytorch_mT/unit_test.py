@@ -69,7 +69,13 @@ if __name__ == '__main__':
     # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
 
     time_start=time.time()
-    train_acc_array,test_acc_array=train(args,aT_model,device)
+    if args.k_allTrain_epochs == args.total_epochs:
+        train_acc_array,test_acc_array=all_train(args,aT_model,device)
+    elif 0<=args.k_allTrain_epochs < args.total_epochs:
+        train_acc_array,test_acc_array=micro_train(args,aT_model,device)
+    else :
+        print("Error ! please make sure k_allTrain show be smaller than total!")
+        exit()
 
 
     if os.path.exists("./Result_npz/C64") == False:
