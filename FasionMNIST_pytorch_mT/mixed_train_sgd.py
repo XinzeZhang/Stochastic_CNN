@@ -80,6 +80,8 @@ def all_train(args, model, device):
     model.share_memory().to(device)
     if os.path.exists("./Model_State/"+str(model.__class__.__name__)) == False:
         os.mkdir("./Model_State/"+str(model.__class__.__name__))
+    if os.path.exists("./Result_npz/"+str(model.__class__.__name__)) == False:
+        os.mkdir("./Result_npz/"+str(model.__class__.__name__))
     torch.manual_seed(args.seed)
 
     train_loader = torch.utils.data.DataLoader(
@@ -143,6 +145,8 @@ def micro_train(args, model, device):
     model.share_memory().to(device)
     if os.path.exists("./Model_State/"+str(model.__class__.__name__)) == False:
         os.mkdir("./Model_State/"+str(model.__class__.__name__))
+    if os.path.exists("./Result_npz/"+str(model.__class__.__name__)) == False:
+        os.mkdir("./Result_npz/"+str(model.__class__.__name__))
     torch.manual_seed(args.seed)
 #
     train_loader = torch.utils.data.DataLoader(
@@ -406,7 +410,7 @@ def _test_epoch(epoch, model, device, data_loader, args):
                                                                                                   data_loader.dataset),
                                                                                               100. * correct / len(data_loader.dataset)))
     print('-----------------------------------------------------------------')
-    with open("./Result_npz/C64/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
+    with open("./Result_npz/"+str(model.__class__.__name__)+"/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
         print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                   test_loss, correct, len(
                                                                                                       data_loader.dataset),

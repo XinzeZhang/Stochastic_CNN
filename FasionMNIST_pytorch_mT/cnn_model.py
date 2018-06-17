@@ -16,9 +16,9 @@ def weights_init(m):
     # elif classname.find('Linear') != -1:
     #     m.weight.data.normal_(0, 0.1)
 
-class SCSF_Net(nn.Module):
+class C64F10(nn.Module):
     def __init__(self):
-        super(SCSF_Net, self).__init__()
+        super(C64F10, self).__init__()
         self.conv1 = nn.Conv2d(1, 64, kernel_size=5,stride=1,padding=2)
         self.conv2_drop = nn.Dropout2d(p=0.5)
         self.fc1 = nn.Linear(12544, 10)
@@ -28,6 +28,22 @@ class SCSF_Net(nn.Module):
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
         x = self.conv2_drop(x)
         x = x.view(-1, 12544)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+class C32F10(nn.Module):
+    def __init__(self):
+        super(C32F10, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=5,stride=1,padding=2)
+        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.fc1 = nn.Linear(32*14*14, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 32*14*14)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         return F.log_softmax(x, dim=1)

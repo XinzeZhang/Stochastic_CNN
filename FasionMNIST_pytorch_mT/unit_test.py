@@ -7,7 +7,7 @@ import sys
 import os
 import numpy as np
 
-from cnn_model import SCSF_Net, DCDF_Net,weights_init
+from cnn_model import C32F10,weights_init
 from mixed_train_sgd import train,micro_train,all_train
 
 import time
@@ -22,7 +22,7 @@ parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--total_epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 300)')
-parser.add_argument('--k_allTrain_epochs', type=int, default=0, metavar='N',
+parser.add_argument('--k_allTrain_epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 100)')
 # ------------------------------------------------------------------------------
 # setting learning rate as https://cs.nyu.edu/~wanli/dropc/dropc.pdf.
@@ -64,10 +64,14 @@ if __name__ == '__main__':
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device=torch.device("cuda" if use_cuda else "cpu")
 
-    aT_model = SCSF_Net()
+    aT_model = C32F10()
     aT_model.apply(weights_init)
-    # model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
-
+    # aT_model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
+    if os.path.exists("./Model_State/"+str(aT_model.__class__.__name__)) == False:
+        os.mkdir("./Model_State/"+str(aT_model.__class__.__name__))
+    if os.path.exists("./Result_npz/"+str(aT_model.__class__.__name__)) == False:
+        os.mkdir("./Result_npz/"+str(aT_model.__class__.__name__))
+        
     time_start=time.time()
     if args.k_allTrain_epochs == args.total_epochs:
         train_acc_array,test_acc_array=all_train(args,aT_model,device)
@@ -78,11 +82,9 @@ if __name__ == '__main__':
         exit()
 
 
-    dirs = "./Result_npz/C64/"
-    if not os.path.exists(dirs):
-        os.mkdir(dirs)
+    log_dirs = "./Result_npz/"+str(aT_model.__class__.__name__)
     
-    with open(dirs+"/Time_Log.txt", "a+") as f:
+    with open(log_dirs+"/Time_Log.txt", "a+") as f:
         print("K: %s \t %s" % (args.k_allTrain_epochs,asMinutes(time.time() - time_start)) , file=f)
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
-    np.savez(dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)
+    np.savez(log_dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)
