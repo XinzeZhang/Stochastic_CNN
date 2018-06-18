@@ -1,23 +1,14 @@
-import matplotlib.pyplot as plt
+from _data_process import asMinutesUnit
+import numpy  as np
 
-def get_cmap(n, name='hsv'):
-    '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
-    RGB color; the keyword argument name must be a standard mpl colormap name.'''
-    return plt.cm.get_cmap(name, n)
+f = np.loadtxt('D:/xinze/Documents/GitHub/Stochastic_CNN/FasionMNIST_pytorch_mT/Result_npz/C32F10/Time_Log.txt')
 
-def main():
-    N = 30
-    fig=plt.figure()
-    ax=fig.add_subplot(111)   
-    plt.axis('scaled')
-    ax.set_xlim([ 0, N])
-    ax.set_ylim([-0.5, 0.5])
-    cmap = get_cmap(N)
-    for i in range(N):
-        rect = plt.Rectangle((i, -0.5), 1, 1, facecolor=cmap(i))
-        ax.add_artist(rect)
-    ax.set_yticks([])
-    plt.show()
+f[:,2]=f[:,1]*60+f[:,2]
+for k , t in zip(f[:,0],f[:,2]):
+    m=asMinutesUnit(t)
+    print("%d\t%s" % (k,m) )
 
-if __name__=='__main__':
-    main()
+with open("./Time_Log.txt", "w+") as n:
+    for k , t in zip(f[:,0],f[:,2]):
+        m=asMinutesUnit(t)
+        print("%d\t%s" % (k,m) , file=n)

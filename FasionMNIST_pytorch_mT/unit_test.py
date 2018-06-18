@@ -11,7 +11,7 @@ from cnn_model import C32F10,weights_init
 from mixed_train_sgd import train,micro_train,all_train
 
 import time
-from _data_process import asMinutes
+from _data_process import asMinutesUnit
 
 # Training settings
 # ==============================================================================
@@ -85,6 +85,6 @@ if __name__ == '__main__':
     log_dirs = "./Result_npz/"+str(aT_model.__class__.__name__)
     
     with open(log_dirs+"/Time_Log.txt", "a+") as f:
-        print("K: %s \t %s" % (args.k_allTrain_epochs,asMinutes(time.time() - time_start)) , file=f)
+        print("%d\t%s" % (args.k_allTrain_epochs,asMinutesUnit(time.time() - time_start)) , file=f)
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
     np.savez(log_dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)

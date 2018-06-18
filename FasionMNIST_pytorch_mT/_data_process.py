@@ -29,6 +29,11 @@ def asMinutes(s):
     s -= m * 60
     return '%dm %ds' % (m, s)
 
+def asMinutesUnit(s):
+    m = math.floor(s / 60)
+    s -= m * 60
+    m+=s/60.0
+    return '%.3f' % (m)
 # time-count
 
 
