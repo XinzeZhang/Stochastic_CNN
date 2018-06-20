@@ -15,6 +15,53 @@ def weights_init(m):
     #     # m.weight.data.normal_(0.0, 0.01)
     # elif classname.find('Linear') != -1:
     #     m.weight.data.normal_(0, 0.1)
+class C112F10(nn.Module):
+    def __init__(self):
+        super(C112F10, self).__init__()
+        self.conv1 = nn.Conv2d(1, 112, kernel_size=5,stride=1,padding=2)
+        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.fc1 = nn.Linear(112*14*14, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 112*14*14)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+class C96F10(nn.Module):
+    def __init__(self):
+        super(C96F10, self).__init__()
+        self.conv1 = nn.Conv2d(1, 96, kernel_size=5,stride=1,padding=2)
+        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.fc1 = nn.Linear(96*14*14, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 96*14*14)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+class C80F10(nn.Module):
+    def __init__(self):
+        super(C80F10, self).__init__()
+        self.conv1 = nn.Conv2d(1, 80, kernel_size=5,stride=1,padding=2)
+        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.fc1 = nn.Linear(80*14*14, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 80*14*14)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
 
 class C64F10(nn.Module):
     def __init__(self):
@@ -28,6 +75,22 @@ class C64F10(nn.Module):
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
         x = self.conv2_drop(x)
         x = x.view(-1, 12544)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+class C48F10(nn.Module):
+    def __init__(self):
+        super(C48F10, self).__init__()
+        self.conv1 = nn.Conv2d(1, 48, kernel_size=5,stride=1,padding=2)
+        self.conv2_drop = nn.Dropout2d(p=0.5)
+        self.fc1 = nn.Linear(48*14*14, 10)
+
+    def forward(self, x):
+        # stride – the stride of the window. Default value is kernel_size, thus it is 2 here.
+        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2,stride=2))
+        x = self.conv2_drop(x)
+        x = x.view(-1, 48*14*14)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         return F.log_softmax(x, dim=1)
