@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # aT_model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
     if os.path.exists("../Model_State/"+str(aT_model.__class__.__name__)) == False:
         os.mkdir("../Model_State/"+str(aT_model.__class__.__name__))
-    if os.path.exists("./Result_npz/"+str(aT_model.__class__.__name__)) == False:
+    if os.path.exists("../Result_npz/"+str(aT_model.__class__.__name__)) == False:
         os.mkdir("../Result_npz/"+str(aT_model.__class__.__name__))
         
     time_start=time.time()
