@@ -9,8 +9,8 @@ import numpy as np
 def train(args, model, device):
     model = model.to(device)
     model.share_memory().to(device)
-    if os.path.exists("./Model_State/"+str(model.__class__.__name__)) == False:
-        os.mkdir("./Model_State/"+str(model.__class__.__name__))
+    if os.path.exists("./Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10") == False:
+        os.mkdir("./Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10")
     torch.manual_seed(args.seed)
 
     train_loader = torch.utils.data.DataLoader(
@@ -42,8 +42,8 @@ def train(args, model, device):
         test_acc = _test_epoch(epoch, model, device, test_loader, args)
         test_acc_array.append(test_acc)
 
-    dir_model_state = "./Model_State/"+str(model.__class__.__name__)+"/"+str(
-        model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"
+    dir_model_state = "./Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
+        model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
     torch.save(model.state_dict(), dir_model_state)
 
     layer_id = 0
@@ -299,8 +299,8 @@ def half_freeze(L_W, R_W, args, model, device, train_loader, test_loader, lr, tr
         test_acc = _test_epoch(epoch, model, device, test_loader, args)
         test_acc_array.append(test_acc)
 
-    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"/"+str(
-        model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"
+    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
+        model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
     torch.save(model.state_dict(), dir_model_state)
 
     layer_id = 0
@@ -402,7 +402,7 @@ def _test_epoch(epoch, model, device, data_loader, args):
                                                                                                   data_loader.dataset),
                                                                                               100. * correct / len(data_loader.dataset)))
     print('-----------------------------------------------------------------')
-    with open("../Result_npz/"+str(model.__class__.__name__)+"/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
+    with open("../Result_npz/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
         print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                   test_loss, correct, len(
                                                                                                       data_loader.dataset),
