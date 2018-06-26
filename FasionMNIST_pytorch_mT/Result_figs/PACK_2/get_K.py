@@ -32,5 +32,5 @@ for dir_name in dir_list[:]:
         axis_x = [step]*300
         score_list.append(test_acc[-1])
     max_index = np.argmax(np.array(score_list))
-    if max_index != len(score_list) - 1:
-        print (dir_name +' K=' + str(steps[max_index]) + ' acc: ' + str(score_list[max_index]))
+    # if max_index != len(score_list) - 1:
+    print (dir_name +'\t K=' + str(steps[max_index]) + ' acc: ' + str(score_list[max_index])+'\t K=' + str(steps[-1]) + ' acc: ' + str(score_list[-1]))
