@@ -129,8 +129,9 @@ def all_train(args, model, device):
     train_window(w123c, w123d, args, model, device, train_loader,
                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
-    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"/"+str(
-        model.__class__.__name__)+"_"+str(args.k_allTrain_epochs)+".pkl"
+    model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
+    k_model_name = model_name+"_"+str(args.k_allTrain_epochs)
+    dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
     torch.save(model.state_dict(), dir_model_state)
 
     return train_acc_array, test_acc_array
