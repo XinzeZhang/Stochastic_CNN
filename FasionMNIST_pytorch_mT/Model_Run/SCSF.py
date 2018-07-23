@@ -52,6 +52,9 @@ parser.add_argument('--log-interval', type=int, default=60, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--num_train', type=int, default=1, metavar='N',
                     help='how many training times to use (default: 1)')
+# ------------------------------------------------------------------------------
+parser.add_argument('--gpu', type=int, default=0, metavar='C',
+                    help='random seed (default: 0)')
 # ==============================================================================
 
 if __name__ == '__main__':
@@ -64,7 +67,7 @@ if __name__ == '__main__':
     args.total_epochs = args.LR_window1 + args.LR_window2 *2 + args.LR_window3*4
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    device=torch.device("cuda" if use_cuda else "cpu")
+    device=torch.device("cuda", args.gpu if use_cuda else "cpu")
 
     aT_model = SCSF(n_kernel=args.n_kernel)
     aT_model.apply(weights_init)
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     elif 0<=args.k_allTrain_epochs < args.total_epochs:
         train_acc_array,test_acc_array=micro_train(args,aT_model,device)
     else :
-        print("Error ! please make sure k_allTrain show be smaller than total!")
+        print("Error ! please make sure k_allTrain is smaller than totals!")
         exit()
 
 
