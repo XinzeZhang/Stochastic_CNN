@@ -138,6 +138,9 @@ def all_train(args, model, device):
 
 
 def micro_train(args, model, device):
+    '''
+    Training for some steps, say K, for the network, then fix the convolutional layer and only train the last linear layer works well.
+    '''
     model = model.to(device)
     model.share_memory().to(device)
     torch.manual_seed(args.seed)
@@ -173,7 +176,7 @@ def micro_train(args, model, device):
     w123d = w12b+args.LR_window3*4
     # lr windows 1
     if args.k_allTrain_epochs < w1:
-        half_freeze(0, w1, args, model, device, train_loader,
+        conv_fixed(0, w1, args, model, device, train_loader,
                     test_loader, init_lr, train_acc_array, test_acc_array)
         train_window(w1, w12a, args, model, device, train_loader,
                      test_loader, init_lr*0.5, train_acc_array, test_acc_array)
@@ -192,7 +195,7 @@ def micro_train(args, model, device):
     if w1 <= args.k_allTrain_epochs < w12a:
         train_window(0, w1, args, model, device, train_loader,
                      test_loader, init_lr, train_acc_array, test_acc_array)
-        half_freeze(w1, w12a, args, model, device, train_loader,
+        conv_fixed(w1, w12a, args, model, device, train_loader,
                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
         train_window(w12a, w12b, args, model, device, train_loader,
                      test_loader, init_lr*0.1, train_acc_array, test_acc_array)
@@ -210,7 +213,7 @@ def micro_train(args, model, device):
                      test_loader, init_lr, train_acc_array, test_acc_array)
         train_window(w1, w12a, args, model, device, train_loader,
                      test_loader, init_lr*0.5, train_acc_array, test_acc_array)
-        half_freeze(w12a, w12b, args, model, device, train_loader,
+        conv_fixed(w12a, w12b, args, model, device, train_loader,
                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
         train_window(w12b, w123a, args, model, device, train_loader,
                      test_loader, init_lr*0.05, train_acc_array, test_acc_array)
@@ -229,7 +232,7 @@ def micro_train(args, model, device):
                      test_loader, init_lr*0.5, train_acc_array, test_acc_array)
         train_window(w12a, w12b, args, model, device, train_loader,
                      test_loader, init_lr*0.1, train_acc_array, test_acc_array)
-        half_freeze(w12b, w123a, args, model, device, train_loader,
+        conv_fixed(w12b, w123a, args, model, device, train_loader,
                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
         train_window(w123a, w123b, args, model, device, train_loader,
                      test_loader, init_lr*0.01, train_acc_array, test_acc_array)
@@ -247,7 +250,7 @@ def micro_train(args, model, device):
                      test_loader, init_lr*0.1, train_acc_array, test_acc_array)
         train_window(w12b, w123a, args, model, device, train_loader,
                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
-        half_freeze(w123a, w123b, args, model, device, train_loader,
+        conv_fixed(w123a, w123b, args, model, device, train_loader,
                      test_loader, init_lr*0.01, train_acc_array, test_acc_array)
         train_window(w123b, w123c, args, model, device, train_loader,
                      test_loader, init_lr*0.005, train_acc_array, test_acc_array)
@@ -265,7 +268,7 @@ def micro_train(args, model, device):
                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
         train_window(w123a, w123b, args, model, device, train_loader,
                      test_loader, init_lr*0.01, train_acc_array, test_acc_array)
-        half_freeze(w123b, w123c, args, model, device, train_loader,
+        conv_fixed(w123b, w123c, args, model, device, train_loader,
                      test_loader, init_lr*0.005, train_acc_array, test_acc_array)
         train_window(w123c, w123d, args, model, device, train_loader,
                      test_loader, init_lr*0.001, train_acc_array, test_acc_array)
@@ -283,7 +286,7 @@ def micro_train(args, model, device):
                      test_loader, init_lr*0.01, train_acc_array, test_acc_array)
         train_window(w123b, w123c, args, model, device, train_loader,
                      test_loader, init_lr*0.005, train_acc_array, test_acc_array)
-        half_freeze(w123c, w123d, args, model, device, train_loader,
+        conv_fixed(w123c, w123d, args, model, device, train_loader,
                      test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
     dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
@@ -293,7 +296,10 @@ def micro_train(args, model, device):
     return train_acc_array, test_acc_array
 
 
-def half_freeze(L_W, R_W, args, model, device, train_loader, test_loader, lr, train_acc_array, test_acc_array):
+def conv_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, train_acc_array, test_acc_array):
+    '''
+    fixed convolutional layer
+    '''
     optimizer = optim.SGD(
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
     print(optimizer)
@@ -310,13 +316,210 @@ def half_freeze(L_W, R_W, args, model, device, train_loader, test_loader, lr, tr
         print("layer Id: "+str(layer_id), child)
         for param in child.parameters():
             param.requires_grad = False
+            print(param)
 
     model.fc1.weight.requires_grad = True
     model.fc1.bias.requires_grad = True
 
     optimizer = optim.SGD(
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
-    print("---------> freeze the convolutional layer <---------")
+    print("---------> fixed the convolutional layer <---------")
+    for epoch in range(args.k_allTrain_epochs + 1, R_W + 1):
+        _train_epoch(epoch, args, model, device, train_loader, optimizer)
+        train_acc = _train_acc(epoch, model, device, train_loader)
+        train_acc_array.append(train_acc)
+        test_acc = _test_epoch(epoch, model, device, test_loader, args)
+        test_acc_array.append(test_acc)
+
+def bias_train(args, model, device):
+    '''
+    Training for some steps, say K, for the network, then fix the weight of layers and only train the bias.
+    return train_acc_array, test_acc_array
+    '''
+    model = model.to(device)
+    model.share_memory().to(device)
+    torch.manual_seed(args.seed)
+#
+    train_loader = torch.utils.data.DataLoader(
+        datasets.FashionMNIST('../data', train=True, download=True,
+                              transform=transforms.Compose([
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.1307,), (0.3081,))
+                              ])),
+        batch_size=args.batch_size, shuffle=True, num_workers=1)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.FashionMNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=args.batch_size, shuffle=True, num_workers=1)
+
+    train_acc_array = []
+    # train_acc=0.0
+    test_acc_array = []
+    # test_acc=0.0
+
+    init_lr = args.SGD_lr
+    # optimizer = optim.SGD(model.parameters(),lr=args.aT_Adam_lr,momentum=args.momentum)
+
+    w1 = args.LR_window1
+    w12a = args.LR_window1+args.LR_window2
+    w12b = args.LR_window1+args.LR_window2*2
+    w123a = w12b+args.LR_window3
+    w123b = w12b+args.LR_window3*2
+    w123c = w12b+args.LR_window3*3
+    w123d = w12b+args.LR_window3*4
+    # lr windows 1
+    if args.k_allTrain_epochs < w1:
+        weight_fixed(0, w1, args, model, device, train_loader,
+                    test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    # lr windows 2
+    if w1 <= args.k_allTrain_epochs < w12a:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        weight_fixed(w1, w12a, args, model, device, train_loader,
+                    test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    if w12a <= args.k_allTrain_epochs < w12b:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        weight_fixed(w12a, w12b, args, model, device, train_loader,
+                    test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                     test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    # lr windows 3
+    if w12b <= args.k_allTrain_epochs < w123a:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        weight_fixed(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    if w123a <= args.k_allTrain_epochs < w123b:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        weight_fixed(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    if w123b <= args.k_allTrain_epochs < w123c:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        weight_fixed(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        train_window(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    if w123c <= args.k_allTrain_epochs < w123d:
+        train_window(0, w1, args, model, device, train_loader,
+                     test_loader, init_lr, train_acc_array, test_acc_array)
+        train_window(w1, w12a, args, model, device, train_loader,
+                     test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+        train_window(w12a, w12b, args, model, device, train_loader,
+                     test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+        train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+        train_window(w123a, w123b, args, model, device, train_loader,
+                     test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+        train_window(w123b, w123c, args, model, device, train_loader,
+                     test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+        weight_fixed(w123c, w123d, args, model, device, train_loader,
+                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
+        model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
+    torch.save(model.state_dict(), dir_model_state)
+
+    return train_acc_array, test_acc_array
+
+def weight_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, train_acc_array, test_acc_array):
+    '''
+    fixed weight of all layers
+    '''
+    optimizer = optim.SGD(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
+    print(optimizer)
+    for epoch in range(L_W+1, args.k_allTrain_epochs + 1):
+        _train_epoch(epoch, args, model, device, train_loader, optimizer)
+        train_acc = _train_acc(epoch, model, device, train_loader)
+        train_acc_array.append(train_acc)
+        test_acc = _test_epoch(epoch, model, device, test_loader, args)
+        test_acc_array.append(test_acc)
+
+    layer_id = 0
+    for child in model.children():
+        layer_id += 1
+        print("layer Id: "+str(layer_id), child)
+        for param in child.parameters():
+            param.requires_grad = False
+            print(param)
+    
+    # fixed the weights of convolutional layer and last linear layer.
+    model.conv1.bias.requires_grad=True
+    # model.fc1.weight.requires_grad = True
+    model.fc1.bias.requires_grad = True
+
+    optimizer = optim.SGD(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
+    print("---------> fixed the convolutional layer <---------")
     for epoch in range(args.k_allTrain_epochs + 1, R_W + 1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)

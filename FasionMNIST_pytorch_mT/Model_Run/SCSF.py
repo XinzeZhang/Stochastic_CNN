@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from _cnn_model import SCSF,weights_init
-from _mixed_train_sgd import train,micro_train,all_train
+from _mixed_train_sgd import train,micro_train,all_train,bias_train
 
 import time
 from _data_process import asMinutesUnit
@@ -22,7 +22,7 @@ parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--total_epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 300)')
-parser.add_argument('--k_allTrain_epochs', type=int, default=300, metavar='N',
+parser.add_argument('--k_allTrain_epochs', type=int, default=0, metavar='N',
                     help='number of epochs to train (default: 100)')
 parser.add_argument('--n_kernel', type=int, default=128, metavar='N',
                     help='number of epochs to train (default: 128)')
@@ -82,6 +82,7 @@ if __name__ == '__main__':
         train_acc_array,test_acc_array=all_train(args,aT_model,device)
     elif 0<=args.k_allTrain_epochs < args.total_epochs:
         train_acc_array,test_acc_array=micro_train(args,aT_model,device)
+        # train_acc_array,test_acc_array=bias_train(args,aT_model,device)
     else :
         print("Error ! please make sure k_allTrain is smaller than totals!")
         exit()
