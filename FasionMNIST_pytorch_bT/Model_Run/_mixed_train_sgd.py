@@ -510,7 +510,7 @@ def weight_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, t
         print("layer Id: "+str(layer_id), child)
         for param in child.parameters():
             param.requires_grad = False
-            print(param)
+            # print(param)
     
     # fixed the weights of convolutional layer and last linear layer.
     model.conv1.bias.requires_grad=True
@@ -519,7 +519,7 @@ def weight_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, t
 
     optimizer = optim.SGD(
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
-    print("---------> fixed the convolutional layer <---------")
+    print("---------> fixed the weight of all layers <---------")
     for epoch in range(args.k_allTrain_epochs + 1, R_W + 1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)
