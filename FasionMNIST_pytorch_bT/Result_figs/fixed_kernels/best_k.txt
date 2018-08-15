@@ -1,0 +1,2 @@
+when kernel_num: 320     max accuracy is 91.84   K step: 220     epoch: 198
+when kernel_num: 768     max accuracy is 91.89   K step: 220     epoch: 212
