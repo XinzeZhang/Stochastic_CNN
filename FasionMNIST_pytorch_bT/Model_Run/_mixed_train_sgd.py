@@ -75,6 +75,70 @@ def train(args, model, device):
     # np.savez(dirs+"/acc"+".npz", test_acc_array, train_acc_array)
 '''
 
+def all_train_state(args, model, device):
+    '''
+    to get individual states of all training epochs
+    '''
+    model = model.to(device)
+    model.share_memory().to(device)
+    torch.manual_seed(args.seed)
+
+    train_loader = torch.utils.data.DataLoader(
+        datasets.FashionMNIST('../data', train=True, download=True,
+                              transform=transforms.Compose([
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.1307,), (0.3081,))
+                              ])),
+        batch_size=args.batch_size, shuffle=True, num_workers=1)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.FashionMNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=args.batch_size, shuffle=True, num_workers=1)
+
+    train_acc_array = []
+    # train_acc=0.0
+    test_acc_array = []
+    # test_acc=0.0
+
+    init_lr = args.SGD_lr
+    # optimizer = optim.SGD(model.parameters(),lr=args.aT_Adam_lr,momentum=args.momentum)
+
+    # window counting
+    w1 = args.LR_window1
+    w12a = args.LR_window1+args.LR_window2
+    w12b = args.LR_window1+args.LR_window2*2
+    w123a = w12b+args.LR_window3
+    w123b = w12b+args.LR_window3*2
+    w123c = w12b+args.LR_window3*3
+    w123d = w12b+args.LR_window3*4
+
+    # lr window 1
+    train_window(0, w1, args, model, device, train_loader,
+                test_loader, init_lr, train_acc_array, test_acc_array)
+    # lr window 2
+    train_window(w1, w12a, args, model, device, train_loader,
+                    test_loader, init_lr*0.5, train_acc_array, test_acc_array)
+    train_window(w12a, w12b, args, model, device, train_loader,
+                    test_loader, init_lr*0.1, train_acc_array, test_acc_array)
+    # lr window 3
+    train_window(w12b, w123a, args, model, device, train_loader,
+                    test_loader, init_lr*0.05, train_acc_array, test_acc_array)
+    train_window(w123a, w123b, args, model, device, train_loader,
+                    test_loader, init_lr*0.01, train_acc_array, test_acc_array)
+    train_window(w123b, w123c, args, model, device, train_loader,
+                    test_loader, init_lr*0.005, train_acc_array, test_acc_array)
+    train_window(w123c, w123d, args, model, device, train_loader,
+                    test_loader, init_lr*0.001, train_acc_array, test_acc_array)
+
+    # model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
+    # k_model_name = model_name+"_"+str(args.k_allTrain_epochs)
+    # dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
+    # torch.save(model.state_dict(), dir_model_state)
+
+    return train_acc_array, test_acc_array
+
 def all_train(args, model, device):
     model = model.to(device)
     model.share_memory().to(device)
@@ -129,10 +193,10 @@ def all_train(args, model, device):
     train_window(w123c, w123d, args, model, device, train_loader,
                     test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
-    model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
-    k_model_name = model_name+"_"+str(args.k_allTrain_epochs)
-    dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
-    torch.save(model.state_dict(), dir_model_state)
+    # model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
+    # k_model_name = model_name+"_"+str(args.k_allTrain_epochs)
+    # dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
+    # torch.save(model.state_dict(), dir_model_state)
 
     return train_acc_array, test_acc_array
 
@@ -289,9 +353,9 @@ def micro_train(args, model, device):
         conv_fixed(w123c, w123d, args, model, device, train_loader,
                      test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
-    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
-        model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
-    torch.save(model.state_dict(), dir_model_state)
+    # dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
+    #     model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
+    # torch.save(model.state_dict(), dir_model_state)
 
     return train_acc_array, test_acc_array
 
@@ -303,6 +367,13 @@ def conv_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, tra
     optimizer = optim.SGD(
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
     print(optimizer)
+
+    model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
+    k_model_name = model_name+"_"+str(k_allTrain_epochs)
+    dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
+    model.load_state_dict(torch.load(dir_model_state))
+    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     for epoch in range(L_W+1, args.k_allTrain_epochs + 1):
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)
@@ -484,9 +555,9 @@ def bias_train(args, model, device):
         weight_fixed(w123c, w123d, args, model, device, train_loader,
                      test_loader, init_lr*0.001, train_acc_array, test_acc_array)
 
-    dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
-        model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
-    torch.save(model.state_dict(), dir_model_state)
+    # dir_model_state = "../Model_State/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/"+str(
+    #     model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"_"+str(args.k_allTrain_epochs)+".pkl"
+    # torch.save(model.state_dict(), dir_model_state)
 
     return train_acc_array, test_acc_array
 
@@ -533,7 +604,15 @@ def train_window(L_W, R_W, args, model, device, train_loader, test_loader, lr, t
         filter(lambda p: p.requires_grad, model.parameters()), lr=lr, weight_decay=0.0005, momentum=0.9)
     print("---------> Step into another training window <---------")
     print(optimizer)
+
+    model_name = str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
     for epoch in range(L_W+1, R_W + 1):
+        # save state of model
+        if args.get_state:
+            k_model_name = model_name+"_"+str(epoch)
+            dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
+            torch.save(model.state_dict(), dir_model_state)
+
         _train_epoch(epoch, args, model, device, train_loader, optimizer)
         train_acc = _train_acc(epoch, model, device, train_loader)
         train_acc_array.append(train_acc)
@@ -553,10 +632,10 @@ def _train_epoch(epoch, args, model, device, data_loader, optimizer):
         train_loss = loss.item()
         loss.backward()
         optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}'.format(
-                pid, epoch, batch_idx * len(data), len(data_loader.dataset),
-                100. * batch_idx / len(data_loader), loss.item()))
+        # if batch_idx % args.log_interval == 0:
+        #     print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.10f}'.format(
+        #         pid, epoch, batch_idx * len(data), len(data_loader.dataset),
+        #         100. * batch_idx / len(data_loader), loss.item()))
     # return train_loss
 
 
