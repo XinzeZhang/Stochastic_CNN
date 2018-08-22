@@ -518,6 +518,7 @@ def train_window(L_W, R_W, args, model, device, train_loader, test_loader, lr, t
             k_model_name = model_name+"_"+str(epoch)
             dir_model_state = "../Model_State/"+model_name+"/"+k_model_name+".pkl"
             torch.save(model.state_dict(), dir_model_state)
+            print("Save the model state: "+ model_name+"/"+k_model_name+".pkl")
         # save state of model
         train_acc = _train_acc(epoch, model, device, train_loader)
         train_acc_array.append(train_acc)
