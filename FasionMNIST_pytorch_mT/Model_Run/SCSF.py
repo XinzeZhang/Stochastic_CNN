@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from _cnn_model import SCSF,weights_init
-from _mixed_train_sgd import train,micro_train,all_train,bias_train
+from _mixed_train_sgd import micro_train,all_train,bias_train
 
 import time
 from _data_process import asMinutesUnit
@@ -20,19 +20,21 @@ parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--total_epochs', type=int, default=300, metavar='N',
+parser.add_argument('--total_epochs', type=int, default=144, metavar='N',
                     help='number of epochs to train (default: 300)')
-parser.add_argument('--k_allTrain_epochs', type=int, default=0, metavar='N',
-                    help='number of epochs to train (default: 100)')
-parser.add_argument('--n_kernel', type=int, default=128, metavar='N',
-                    help='number of epochs to train (default: 128)')
+parser.add_argument('--k_allTrain_epochs', type=int, default=1, metavar='N',
+                    help='number of epochs to train (default: 300)')
+parser.add_argument('--n_kernel', type=int, default=320, metavar='N',
+                    help='number of epochs to train (default: 320)')
+parser.add_argument('--get_state', action='store_true', default=False,
+                    help='get all model state of all training epochs')
 # ------------------------------------------------------------------------------
 # setting learning rate as https://cs.nyu.edu/~wanli/dropc/dropc.pdf.
-parser.add_argument('--LR_window1', type=int, default=100, metavar='W1',
+parser.add_argument('--LR_window1', type=int, default=48, metavar='W1',
                     help='Adam learning rate window 1 (default: 150)')
-parser.add_argument('--LR_window2', type=int, default=50, metavar='W2',
+parser.add_argument('--LR_window2', type=int, default=24, metavar='W2',
                     help='Adam learning rate window 2 (default: 100)')
-parser.add_argument('--LR_window3', type=int, default=25, metavar='W3',
+parser.add_argument('--LR_window3', type=int, default=12, metavar='W3',
                     help='Adam learning rate window 3 (default: 50)')
 
 parser.add_argument('--SGD_lr', type=float, default=0.001, metavar='LR',

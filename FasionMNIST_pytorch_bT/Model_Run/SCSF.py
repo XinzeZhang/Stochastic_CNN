@@ -26,7 +26,7 @@ parser.add_argument('--k_allTrain_epochs', type=int, default=1, metavar='N',
                     help='number of epochs to train (default: 300)')
 parser.add_argument('--n_kernel', type=int, default=320, metavar='N',
                     help='number of epochs to train (default: 320)')
-parser.add_argument('--get_state', action='store_true', default=True,
+parser.add_argument('--get_state', action='store_true', default=False,
                     help='get all model state of all training epochs')
 # ------------------------------------------------------------------------------
 # setting learning rate as https://cs.nyu.edu/~wanli/dropc/dropc.pdf.
