@@ -76,8 +76,8 @@ if __name__ == '__main__':
     # aT_model.share_memory().to(device) # gradients are allocated lazily, so they are not shared here 
     if os.path.exists("../Model_State/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10") == False:
         os.mkdir("../Model_State/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10")
-    if os.path.exists("../Result_npz/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10") == False:
-        os.mkdir("../Result_npz/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10")
+    if os.path.exists("../Result_npz_bT/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10") == False:
+        os.mkdir("../Result_npz_bT/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10")
         
     time_start=time.time()
     if args.k_allTrain_epochs == args.total_epochs:
@@ -90,9 +90,9 @@ if __name__ == '__main__':
         exit()
 
 
-    log_dirs = "../Result_npz/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
+    log_dirs = "../Result_npz_bT/"+str(aT_model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"
     
     with open(log_dirs+"/Time_Log.txt", "a+") as f:
         print("%d\t%s" % (args.k_allTrain_epochs,asMinutesUnit(time.time() - time_start)) , file=f)
     # np.savez(dirs+"/acc"+str(int(microtrain_steps/display_step))+".npz", test_acc_array, train_acc_array)
-    np.savez(log_dirs+"/Acc_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)
+    np.savez(log_dirs+"/Acc_bT_"+str(args.k_allTrain_epochs)+".npz", test_acc_array, train_acc_array)

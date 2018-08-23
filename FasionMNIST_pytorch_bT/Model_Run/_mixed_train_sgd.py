@@ -405,7 +405,7 @@ def conv_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, tra
     model.load_state_dict(torch.load(dir_model_state))
     
     # load the pretrained result sets
-    dir_result_npz = "../Result_npz/"+model_name+"/Acc_"+str(args.total_epochs)+".npz"
+    dir_result_npz = "../Result_npz_bT/"+model_name+"/Acc_"+str(args.total_epochs)+".npz"
     Acc_results=np.load(dir_result_npz)
     test_results,train_results=Acc_results["arr_0"],Acc_results["arr_1"]
 
@@ -462,7 +462,7 @@ def weight_fixed(L_W, R_W, args, model, device, train_loader, test_loader, lr, t
     model.load_state_dict(torch.load(dir_model_state))
     
     # load the pretrained result sets
-    dir_result_npz = "../Result_npz/"+model_name+"/Acc_"+str(args.total_epochs)+".npz"
+    dir_result_npz = "../Result_npz_bT/"+model_name+"/Acc_"+str(args.total_epochs)+".npz"
     Acc_results=np.load(dir_result_npz)
     test_results,train_results=Acc_results["arr_0"],Acc_results["arr_1"]
 
@@ -593,7 +593,7 @@ def _test_epoch(epoch, model, device, data_loader, args):
                                                                                                   data_loader.dataset),
                                                                                               100. * correct / len(data_loader.dataset)))
     print('-----------------------------------------------------------------')
-    with open("../Result_npz/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
+    with open("../Result_npz_bT/"+str(model.__class__.__name__)+"_C"+str(args.n_kernel)+"F10"+"/TestLog_"+str(args.k_allTrain_epochs)+".txt", "a+") as f:
         print('Train Epoch: {}, Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.3f}%)'.format(epoch,
                                                                                                   test_loss, correct, len(
                                                                                                       data_loader.dataset),
